@@ -1,0 +1,4 @@
+# VSCode settings
+/cpp-calculator/.vscode/
+# Build files
+*.exe
