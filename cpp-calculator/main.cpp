@@ -6,63 +6,18 @@
 #include <stack>
 #include <string>
 
-const std::string kLeftBracket = "(";
-
-// Operators that are valid in the expression.
-const std::set<std::string> kOperators {"+", "-", "*", "/"};
-
-// Precedence of each object
-const std::map<std::string, uint8_t> kPrecedence {
-  {"(", 0}, 
-  {")", 0}, 
-  {"^", 1},
-  {"*", 2},
-  {"/", 2},
-  {"+", 3},
-  {"-", 3} 
-};
-
-enum TokenType {OPERAND, OPERATOR};
-
-// Represent a single token of the expression
-struct Token {
-  std::string symbol;
-  uint8_t precedence;
-  TokenType tokenType;
-
-  bool operator>(const Token& other){
-    return precedence > other.precedence;
-  }
-
-  // Create a token from a string symbol
-  static Token FromString(const std::string& token){
-    TokenType tokenType;
-    uint8_t precedence;
-    // Determine precedence and type
-    if (kPrecedence.find(token) != kPrecedence.end())
-    {
-      tokenType = TokenType::OPERATOR; // Precedence only contains operators so if in the map it must be one.
-      precedence = kPrecedence.find(token)->second;
-    }
-    else{
-      tokenType = TokenType::OPERAND;
-      precedence = (uint8_t)4;
-    }
-    
-    return Token{token, precedence, tokenType};
-  }
-};
+#include "token.hpp"
 
 // Parse the human input to RPN expression.
-std::queue<Token> Parse(const std::string& expression)
+std::queue<token::Token> Parse(const std::string& expression)
 {
-  std::queue<Token> output;
-  std::stack<Token> operators;
+  std::queue<token::Token> output;
+  std::stack<token::Token> operators;
 
   // Loop over each character in the expression string.
   for (auto iter = expression.begin(); iter != expression.end(); ++iter)
   {
-    Token token = Token::FromString(std::string{ *iter });
+    token::Token token = token::Token::FromString(std::string{ *iter });
 
     // if number
     if (isdigit(*iter))
@@ -70,7 +25,7 @@ std::queue<Token> Parse(const std::string& expression)
       output.push(token);
     }
     // if operator
-    else if(kOperators.find(token.symbol) != kOperators.end()){
+    else if(token::kOperators.find(token.symbol) != token::kOperators.end()){
       while (!operators.empty())
       {
         if (operators.top() > token)
@@ -118,7 +73,6 @@ std::queue<Token> Parse(const std::string& expression)
     operators.pop();
   }
   
-
   return output;
 }
 
@@ -151,13 +105,13 @@ float DoOperation(float leftValue, float rightValue, const std::string& operatio
 }
 
 // Evaluate an RPN expression. TODO
-float Evaluate(std::queue<Token>& rpnStack) {
-  std::stack<Token> evaluationStack;
+float Evaluate(std::queue<token::Token>& rpnStack) {
+  std::stack<token::Token> evaluationStack;
 
   while (!rpnStack.empty())
   {
     // If the token is a number then add to stack
-    if (rpnStack.front().tokenType == TokenType::OPERAND)
+    if (rpnStack.front().tokenType == token::TokenType::OPERAND)
     {
       evaluationStack.push(rpnStack.front());
       rpnStack.pop();
@@ -165,12 +119,12 @@ float Evaluate(std::queue<Token>& rpnStack) {
     // If it's an operator then pop numbers from stack and use
     else
     {
-      Token firstOperand = evaluationStack.top();
+      token::Token firstOperand = evaluationStack.top();
       evaluationStack.pop();
-      Token secondOperand = evaluationStack.top();
+      token::Token secondOperand = evaluationStack.top();
       evaluationStack.pop();
       float operationResult = DoOperation(std::stof(firstOperand.symbol), std::stof(secondOperand.symbol), rpnStack.front().symbol);
-      evaluationStack.push(Token::FromString(std::to_string(operationResult)));
+      evaluationStack.push(token::Token::FromString(std::to_string(operationResult)));
       // Remove the operator token from queue
       rpnStack.pop();
     }
@@ -196,7 +150,7 @@ int main()
     } else
     {          
       std::cout << "Your input was interpreted as: " << input << std::endl;
-      std::queue<Token> rpnStack = Parse(input);
+      std::queue<token::Token> rpnStack = Parse(input);
       float result = Evaluate(rpnStack);
       std::cout << "Answer: " << std::to_string(result) << std::endl;
     }
