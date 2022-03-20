@@ -1,6 +1,7 @@
 #include <iostream>
 #include <iterator>
 #include <map>
+#include <queue>
 #include <set>
 #include <stack>
 #include <string>
@@ -21,11 +22,13 @@ const std::map<std::string, uint8_t> kPrecedence {
   {"-", 3} 
 };
 
+enum TokenType {OPERAND, OPERATOR};
+
 // Represent a single token of the expression
 struct Token {
-  // Associativity associativity;
   std::string symbol;
   uint8_t precedence;
+  TokenType tokenType;
 
   bool operator>(const Token& other){
     return precedence > other.precedence;
@@ -33,25 +36,27 @@ struct Token {
 
   // Create a token from a string symbol
   static Token FromString(const std::string& token){
+    TokenType tokenType;
     uint8_t precedence;
-    // Determine precedence
+    // Determine precedence and type
     if (kPrecedence.find(token) != kPrecedence.end())
     {
+      tokenType = TokenType::OPERATOR; // Precedence only contains operators so if in the map it must be one.
       precedence = kPrecedence.find(token)->second;
     }
     else{
+      tokenType = TokenType::OPERAND;
       precedence = (uint8_t)4;
     }
     
-    // return Token{associativity, token, precedence};
-    return Token{token, precedence};
+    return Token{token, precedence, tokenType};
   }
 };
 
 // Parse the human input to RPN expression.
-std::stack<Token> Parse(const std::string& expression)
+std::queue<Token> Parse(const std::string& expression)
 {
-  std::stack<Token> output;
+  std::queue<Token> output;
   std::stack<Token> operators;
 
   // Loop over each character in the expression string.
@@ -118,7 +123,7 @@ std::stack<Token> Parse(const std::string& expression)
 }
 
 // Performs the mathematical operation.
-double DoOperation(double leftValue, double rightValue, const std::string& operation){
+float DoOperation(float leftValue, float rightValue, const std::string& operation){
   if (operation == "+")
   {
     return leftValue + rightValue;
@@ -146,13 +151,34 @@ double DoOperation(double leftValue, double rightValue, const std::string& opera
 }
 
 // Evaluate an RPN expression. TODO
-double Evaluate(std::stack<Token>& rpnStack) {
+float Evaluate(std::queue<Token>& rpnStack) {
+  std::stack<Token> evaluationStack;
+
   while (!rpnStack.empty())
   {
-    std::cout << rpnStack.top().symbol;
-    rpnStack.pop();
+    // If the token is a number then add to stack
+    if (rpnStack.front().tokenType == TokenType::OPERAND)
+    {
+      evaluationStack.push(rpnStack.front());
+      rpnStack.pop();
+    }
+    // If it's an operator then pop numbers from stack and use
+    else
+    {
+      Token firstOperand = evaluationStack.top();
+      evaluationStack.pop();
+      Token secondOperand = evaluationStack.top();
+      evaluationStack.pop();
+      float operationResult = DoOperation(std::stof(firstOperand.symbol), std::stof(secondOperand.symbol), rpnStack.front().symbol);
+      evaluationStack.push(Token::FromString(std::to_string(operationResult)));
+      // Remove the operator token from queue
+      rpnStack.pop();
+    }
+    
   }
-  return 0.0;
+
+  // Return whatever is left on evaluation stack
+  return std::stof(evaluationStack.top().symbol);
 }
 
 int main()
@@ -170,8 +196,9 @@ int main()
     } else
     {          
       std::cout << "Your input was interpreted as: " << input << std::endl;
-      std::stack<Token> rpnStack = Parse(input);
-      double result = Evaluate(rpnStack);
+      std::queue<Token> rpnStack = Parse(input);
+      float result = Evaluate(rpnStack);
+      std::cout << "Answer: " << std::to_string(result) << std::endl;
     }
   }
 
