@@ -1,15 +1,10 @@
 #pragma once
 
 #include <map>
-#include <set>
 #include <string>
 
 namespace token
 {
-
-  // Operators that are valid in the expression.
-  const std::set<std::string> kOperators {"+", "-", "*", "/"};
-
   // Precedence of each object
   const std::map<std::string, uint8_t> kPrecedence {
     {"(", 0}, 

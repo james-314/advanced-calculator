@@ -1,8 +1,8 @@
+#include <cmath>
 #include <iostream>
 #include <iterator>
 #include <map>
 #include <queue>
-#include <set>
 #include <stack>
 #include <string>
 
@@ -14,56 +14,77 @@ std::queue<token::Token> Parse(const std::string& expression)
   std::queue<token::Token> output;
   std::stack<token::Token> operators;
 
+  std::string current_number;
+
   // Loop over each character in the expression string.
   for (auto iter = expression.begin(); iter != expression.end(); ++iter)
   {
     token::Token token = token::Token::FromString(std::string{ *iter });
 
     // if number
-    if (isdigit(*iter))
+    if (isdigit(*iter) || *iter == '.')
     {
-      output.push(token);
+      current_number += *iter;
     }
-    // if operator
-    else if(token::kOperators.find(token.symbol) != token::kOperators.end()){
-      while (!operators.empty())
+    else
+    {
+      // check if there is a number waiting to be added first
+      if (!current_number.empty())
       {
-        if (operators.top() > token)
+        output.push(token::Token::FromString(current_number));
+        current_number.clear();
+      }
+      
+
+      // move on to actually add operator
+      // if operator
+      if(token::kPrecedence.find(token.symbol) != token::kPrecedence.end()){
+        while (!operators.empty())
+        {
+          if (operators.top() > token)
+          {
+            output.push(operators.top());
+            operators.pop();
+          }
+          else
+          {
+            break;
+          }
+        }
+        operators.push(token);
+      }
+      // if left bracket
+      else if(token.symbol == "("){
+        output.push(token);
+      }
+      // if right bracket
+      else if(token.symbol == ")"){
+        while (operators.top().symbol != "(")
         {
           output.push(operators.top());
           operators.pop();
         }
-        else
+        if (operators.top().symbol == "(")
         {
-          break;
+          operators.pop();
         }
-      }
-      operators.push(token);
-    }
-    // if left bracket
-    else if(token.symbol == "("){
-      output.push(token);
-    }
-    // if right bracket
-    else if(token.symbol == ")"){
-      while (operators.top().symbol != "(")
-      {
-        output.push(operators.top());
-        operators.pop();
-      }
-      if (operators.top().symbol == "(")
-      {
-        operators.pop();
+        else{
+          std::cout << "Mismatch of brackets" << std::endl;
+        }
+        
       }
       else{
-        std::cout << "Mismatch of brackets" << std::endl;
+        // invalid character
+        std::cout << "Invalid character in expression: " << token.symbol << std::endl;
       }
-      
     }
-    else{
-      // invalid character
-      std::cout << "Invalid character in expression: " << token.symbol << std::endl;
-    }
+  }
+
+  // check if there is a number waiting to be added before finishing
+  if (!current_number.empty())
+  {
+    output.push(token::Token::FromString(current_number));
+    current_number.clear();
   }
 
   // Pop remaining operators to queue
@@ -84,19 +105,19 @@ float DoOperation(float leftValue, float rightValue, const std::string& operatio
   }
   else if (operation == "-")
   {
-    return leftValue + rightValue;
+    return leftValue - rightValue;
   }
   else if (operation == "*")
   {
-    return leftValue + rightValue;
+    return leftValue * rightValue;
   }
   else if (operation == "/")
   {
-    return leftValue + rightValue;
+    return leftValue / rightValue;
   }
   else if (operation == "^")
   {
-    return leftValue + rightValue;
+    return pow(leftValue, rightValue);
   }
   else
   {
@@ -123,7 +144,7 @@ float Evaluate(std::queue<token::Token>& rpnStack) {
       evaluationStack.pop();
       token::Token secondOperand = evaluationStack.top();
       evaluationStack.pop();
-      float operationResult = DoOperation(std::stof(firstOperand.symbol), std::stof(secondOperand.symbol), rpnStack.front().symbol);
+      float operationResult = DoOperation(std::stof(secondOperand.symbol), std::stof(firstOperand.symbol), rpnStack.front().symbol);
       evaluationStack.push(token::Token::FromString(std::to_string(operationResult)));
       // Remove the operator token from queue
       rpnStack.pop();
