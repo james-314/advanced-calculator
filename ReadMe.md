@@ -140,7 +140,7 @@ Distributed under the MIT License. See `LICENSE` for more information.
 
 <!-- CONTACT -->
 ## Contact
-Project Link: [https://github.com/your_username/repo_name](https://github.com/james-314/advanced-calculator)
+Project Link: [https://github.com/james-314/advanced-calculator](https://github.com/james-314/advanced-calculator)
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
