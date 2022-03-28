@@ -21,7 +21,7 @@ std::queue<token::Token> Parse(const std::string& expression)
   {
     token::Token token = token::Token::FromString(std::string{ *iter });
 
-    // if number
+    // if number or part of a number i.e. '.'
     if (isdigit(*iter) || *iter == '.')
     {
       current_number += *iter;
@@ -168,7 +168,8 @@ int main()
     if (input.find("exit") != std::string::npos) // Exit key word found
     {
       break;
-    } else
+    } 
+    else
     {          
       std::cout << "Your input was interpreted as: " << input << std::endl;
       std::queue<token::Token> rpnStack = Parse(input);

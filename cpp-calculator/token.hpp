@@ -1,8 +1,11 @@
+// Header guard
 #pragma once
 
+// Includes for different types used
 #include <map>
 #include <string>
 
+// Create a namespace to collect the relevant pieces of code
 namespace token
 {
   // Precedence of each object
@@ -30,6 +33,4 @@ namespace token
     // Create a token from a string symbol
     static Token FromString(const std::string& token);
   };
-
-  // bool operator>(Token& self, const Token& other);
 }
